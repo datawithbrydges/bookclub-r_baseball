@@ -1,10 +1,283 @@
-# Graphics
+Chapter 3 Slides: Graphics (Albert, Baumer, Marchi)
 
-**Learning objectives:**
+Slide 1: Chapter Overview
+Goal: Introduce graphical methods using ggplot2 in R
 
-- THESE ARE NICE TO HAVE BUT NOT ABSOLUTELY NECESSARY
+Dataset: Hall of Fame batting and pitching statistics
 
-## SLIDE 1 {-}
+Sections:
 
-- ADD SLIDES AS SECTIONS (`##`).
-- TRY TO KEEP THEM RELATIVELY SLIDE-LIKE; THESE ARE NOTES, NOT THE BOOK ITSELF.
+- Visualizing categorical & numeric variables
+
+- Creating and annotating plots
+
+- Saving and exporting graphs
+
+- Exploring hitting patterns and player comparisons
+
+Slide 2: Section 3.1 - Introduction
+- Use the hof_batting data to explore Hall of Fame hitters
+
+- Remove pitchers to focus on 167 non-pitchers
+
+- Learn to choose plots based on variable type (character vs numeric)
+
+- Plot enhancement via + in ggplot2 for labels, styles, and annotations
+
+Slide 3: Section 3.2 - Categorical Variables: Bar Plot
+Add MidCareer and Era variables using mutate() and cut()
+
+Frequency table via group_by() and summarize()
+
+Bar plot using: ggplot(hof, aes(x = Era)) + geom_bar()
+
+Insight: Most players are from the Lively Ball era
+
+Slide 4: Section 3.2.2 - Adding Labels and Titles
+Add axis titles with xlab() and ylab()
+
+Add main title with ggtitle()
+
+ggplot(hof, aes(Era)) + 
+  geom_bar() +
+  xlab("Baseball Era") +
+  ylab("Frequency") +
+  ggtitle("Era of the Nonpitching Hall of Famers")
+
+Slide 5: Section 3.2.3 - Alternative Plot: Dot Plot
+Build Cleveland-style dot plot with geom_point()
+
+Flip coordinates with coord_flip() for clarity
+
+ggplot(hof_eras, aes(Era, N)) + 
+  geom_point(color = "red") + 
+  coord_flip()
+
+Slide 6: Section 3.3 - Saving Graphs
+Save with ggsave("filename.png")
+Export options: PNG, PDF, JPEG, etc.
+Combine plots with patchwork library
+
+p1 + p2; ggsave("graphs.pdf")
+
+Slide 7: Section 3.4 - Numeric Variables: Scatterplot
+One-dimensional scatterplot of OPS:
+
+
+ggplot(hof, aes(x = OPS, y = 1)) + geom_jitter(height = 0.2)
+
+Most OPS values fall between 0.7–1.0
+
+Slide 8: Section 3.4 - Histogram
+Basic histogram:
+ggplot(hof, aes(x = OPS)) + geom_histogram()
+
+Custom histogram:
+ggplot(hof, aes(x = OPS)) + 
+  geom_histogram(breaks = seq(0.4, 1.2, 0.1), color = "white", fill = "orange")
+
+Slide 9: Section 3.5.1 - Two Numeric Variables
+Scatterplot: OPS vs. MidCareer with smooth curve
+ggplot(hof, aes(MidCareer, OPS)) + 
+  geom_point() + 
+  geom_smooth()
+
+Pattern: Steady OPS, bump during 1930s
+
+Slide 10: Section 3.5.1 - Label Outliers
+Add player labels for outliers:
+ggplot(hof, aes(MidCareer, OPS)) + 
+  geom_point() +
+  geom_smooth() +
+  geom_text_repel(data = filter(hof, OPS > 1.05 | OPS < 0.5), aes(label = Player))
+
+
+Slide 11: Section 3.5.2 - OBP vs SLG Graph
+Initial plot:
+p <- ggplot(hof, aes(OBP, SLG)) + geom_point()
+Add axis labels:
+p + xlab("On Base %") + ylab("Slugging %")
+
+
+Slide 12: Section 3.5.2 - Add OPS Lines and Labels
+Add OPS lines:
+p + geom_abline(slope = -1, intercept = seq(0.7, 1.0, 0.1), color = "red")
+
+Label OPS lines:
+p + annotate("text", angle = -13, x = 0.31, y = 0.42, label = "OPS = 0.7")
+
+Slide 13: Section 3.6 - Numeric & Factor: Stripchart
+Add hr_rate = HR / AB
+Parallel stripchart:
+ggplot(hof, aes(hr_rate, Era)) + geom_jitter(height = 0.1)
+Insight: Home runs increased post-Dead Ball era
+
+Slide 14: Section 3.6.2 - Boxplot by Era
+ggplot(hof, aes(Era, hr_rate)) + 
+  geom_boxplot(color = "brown", fill = "orange") + 
+  coord_flip()
+
+Confirms: Babe Ruth as HR outlier
+
+Slide 15: Section 3.7 - Comparing Ruth, Aaron, Bonds, A-Rod
+Use Lahman People + Batting data
+Create Age, cHR, group by Player
+Plot:
+ggplot(HR_data, aes(Age, cHR, color = Player)) + geom_line()
+
+
+Slide 16: Section 3.8 - 1998 HR Race: McGwire vs Sosa
+Extract play-by-play data from retro1998
+Use cum_hr() to create date-wise HR counts
+
+Final plot:
+ggplot(hr_ytd, aes(Date, cumHR, color = nameLast)) + 
+  geom_line() + 
+  geom_hline(yintercept = 62)
+
+
+Slide 17: Bonus Visualization - Spray Chart for Hits
+Visualize where a player hits the ball
+Use x/y coordinates from play-by-play data (if available)
+ggplot(hit_data, aes(x = x_coord, y = y_coord)) + 
+  geom_point(alpha = 0.6) + 
+  facet_wrap(~ batter_name)
+
+
+Slide 18: Bonus Visualization - Heatmap of Home Run Zones
+Use strike zone grid + home run rates
+ggplot(zone_data, aes(plate_x, plate_z, fill = hr_rate)) + 
+  geom_tile() + 
+  scale_fill_gradient(low = "white", high = "red") + 
+  coord_fixed()
+
+
+Slide 19: Bonus Visualization - Animated Career Progression
+Use gganimate to animate cumulative stats
+ggplot(HR_data, aes(Age, cHR, color = Player)) + 
+  geom_line() + 
+  transition_reveal(Age)
+
+
+Slide 20: Exercise 1 - Frequency Table & Bar Graph
+hofpitching <- hof_pitching |>
+  mutate(
+    BF_group = cut(
+      BF, 
+      c(0, 10000, 15000, 20000, 30000),
+      labels = c("Less than 10000", "(10000, 15000)", 
+                 "(15000, 20000)", "more than 20000")
+    )
+  )
+hofpitching |>
+  group_by(BF_group) |>
+  summarize(N = n())
+
+Answer: 13 HOF pitchers faced more than 20,000 batters
+
+
+
+Slide 21: Exercise 1 - Alternative Graph
+ggplot(hofpitching, aes(BF_group)) + 
+  geom_bar(fill = "steelblue") + 
+  xlab("Batters Faced Group") + 
+  ylab("Count") + 
+  ggtitle("Distribution of Hall of Fame Pitchers by Batters Faced")
+
+Alternative:
+ggplot(hofpitching |>
+  group_by(BF_group) |>
+  summarize(N = n()), aes(N, BF_group)) +
+  geom_point(color = "red") +
+  ggtitle("Dot Plot of Pitchers by Batters Faced")
+
+
+Slide 22: Exercise 2 - WAR Histogram
+ggplot(hof_pitching, aes(WAR)) + 
+  geom_histogram(binwidth = 10, fill = "orange", color = "white")
+
+Standout pitchers: Cy Young, Walter Johnson
+
+
+
+Slide 23: Exercise 3 - WAR_Season Stripchart
+hofpitching <- hof_pitching |>
+  mutate(WAR_Season = WAR / Yrs)
+
+ggplot(hofpitching, aes(WAR_Season, BF_group)) + 
+  geom_jitter(height = 0.1)
+
+
+Slide 24: Exercise 3 - WAR_Season Boxplot
+ggplot(hofpitching, aes(BF_group, WAR_Season)) + 
+  geom_boxplot(fill = "orange", color = "brown") +
+  coord_flip()
+
+Interpretation: More batters faced correlates with higher WAR/Season, but with more variability
+
+
+
+Slide 25: Exercise 4 - Dot Plot for Post-1960 Pitchers
+hofpitching <- hofpitching |>
+  mutate(MidYear = (From + To) / 2)
+
+hofpitching_recent <- hofpitching |>
+  filter(MidYear >= 1960) |>
+  arrange(desc(WAR_Season))
+
+ggplot(hofpitching_recent, aes(x = WAR_Season, y = fct_reorder(Name, WAR_Season))) + 
+  geom_point(color = "darkgreen")
+
+Top 2 standout pitchers: Roger Clemens, Pedro Martinez
+
+
+
+Slide 26: Exercise 5 - WAR_Season vs. MidYear
+ggplot(hofpitching, aes(MidYear, WAR_Season)) + 
+  geom_point() + 
+  geom_text(data = filter(hofpitching, MidYear < 1900 & WAR_Season < 3),
+            aes(label = Name), color = "red")
+
+Pattern: Slight decline in WAR/Season over time; early pitchers (e.g., 1800s) had lower WAR/Season
+
+
+
+Slide 27: Exercise 6 - Cumulative Hits of Cobb, Williams, Rose
+# Assumes hits_by_age df with Player, Age, Hits
+# Data prep for all 3 players skipped for brevity
+
+ggplot(hits_by_age, aes(Age, Hits, color = Player)) + 
+  geom_line() + 
+  ylab("Cumulative Hits")
+
+Summary: Rose had the longest consistent hitting career, Cobb peaked earlier, Williams' peak was sharp but interrupted
+
+
+
+Slide 28: Exercise 7 - Team ERA vs. Win % (2022)
+Teams <- Teams |>
+  filter(yearID == 2022) |>
+  mutate(win_pct = W / (W + L))
+
+ggplot(Teams, aes(ERA, win_pct)) + 
+  geom_point() + 
+  xlab("Team ERA") + ylab("Winning Percentage")
+
+
+Slide 29: Exercise 7 - Logos in Scatterplot (mlbplotR installed)
+ggplot(Teams, aes(ERA, win_pct)) +
+  geom_mlb_logos(aes(team_abbr = teamID), width = 0.06) +
+  xlab("ERA") + ylab("Win %") + ggtitle("ERA vs Win % with Team Logos")
+
+
+Slide 30: Exercise 8 - Home Run Spacing
+HR_Spacing <- bind_rows(
+  tibble(Player = "McGwire", Spacing = mac_spacings),
+  tibble(Player = "Sosa", Spacing = sosa_spacings)
+)
+
+ggplot(HR_Spacing, aes(Spacing, fill = Player)) + 
+  geom_histogram(position = "identity", alpha = 0.5, binwidth = 1)
+
+Insight: McGwire hit home runs more frequently (shorter average spacing)
+
